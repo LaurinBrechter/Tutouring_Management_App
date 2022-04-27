@@ -1,10 +1,11 @@
+from weakref import finalize
 import PySimpleGUI as sg
 
 def create_frontend():
 
 
     new_student_tab = [
-        [sg.Text("Please fill out the following details:")],
+        [sg.Text("Please fill out the following details:", key="new_student_header")],
         [sg.Text("Name", size=(15,1)), sg.InputText(key="name")],
         [sg.Text("Hourly Rate", size=(15,1)), sg.InputText(key="hourly_rate")],
         [sg.Text("Platform", size=(15,1)), sg.InputText(key="platform")],
@@ -23,7 +24,8 @@ def create_frontend():
 
 
     db_conn_keys = ["dsn_driver", "dsn_database", "dsn_hostname", "dsn_port", "dsn_protocol", "dsn_uid" , "dsn_pwd", "dsn_security"]
-    db_conn_tab = [[sg.Text(i, size=(10,1)), sg.InputText(key=i)] for i in db_conn_keys]
+    standard_vals = ["{IBM DB2 ODBC DRIVER}", "BLUDB", "", "31505", "TCPIP", "", "", "SSL"]
+    db_conn_tab = [[sg.Text(v, size=(15,1)), sg.InputText(key=v, default_text=standard_vals[i], size=(25,1))] for i, v in enumerate(db_conn_keys)]
 
 
     tab_grp = [[sg.TabGroup([[
@@ -34,5 +36,6 @@ def create_frontend():
 
 
     window = sg.Window("App", tab_grp)
+    
     
     return window

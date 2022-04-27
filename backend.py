@@ -1,21 +1,18 @@
 from genericpath import exists
 import PySimpleGUI as sg
-import pandas as pd
-import sqlite3
-from datetime import datetime
 import os
-import sqlalchemy
 import ibm_db
 import ibm_db_dbi
 from frontend import create_frontend
 from connect_db import conn_db_from_file
 
+os.chdir("Tutouring_Management_App")
 
 password_path = "password.txt"
 if exists(password_path):
     with open(password_path, "r") as f:
         passw = f.read()
-        
+            
     for i in range(3,0,-1):
         if passw == sg.popup_get_text("Please enter your password"):
             sg.popup("Passwort Correct")
@@ -33,6 +30,9 @@ else:
 # create the frontend for our app
 window = create_frontend()
 
+# window["dsn_security"].update("SSL")
+# window["dsn_protocol"].update("TCPIP")
+
 # try connecting to the Database once we start the app
 connected, pcon, conn = conn_db_from_file()
 
@@ -42,7 +42,7 @@ print(pcon, conn)
 while True:
     event,values = window.read()
     # give info about db connection
-    print(event)
+    print(event, values)
     if connected == True:
         print(ibm_db.active(conn))
     
@@ -59,12 +59,13 @@ while True:
         "PWD={6};"        
         "SECURITY={7};").format(*[db_info[i] for i in db_conn_keys])
         
+        
         try:
             conn = ibm_db.connect(dsn, "", "")
             server = ibm_db.server_info(conn)
             connected = True
             pcon = ibm_db_dbi.Connection(conn)
-            with open("tutouring_application\\database_conn.txt", "w") as f:
+            with open("database_conn.txt", "w") as f:
                 f.write(dsn)
         except:
             connected = False
@@ -85,23 +86,28 @@ while True:
         sg.popup("Data saved!")
     
     
+    
     if event == "Save Student":
         if connected == True:
             print(values)
             data = {i:values[i] for i in ["name", "hourly_rate", "platform", "type", "date_acquired"]}
             data["active"] = True
             print(data)
+            header = "Please fill out the following Details"
             
             try:
                 float(data["hourly_rate"])
             
             # ins_query = "INSERT INTO STUDENTS_NEW VALUES ('Hanna', 18, 'Apprentus', 'Python', '2020-04-12', TRUE)"
+                
                 ins_query = f"INSERT INTO STUDENTS_NEW VALUES ('{data['name']}', '{data['hourly_rate']}', '{data['platform']}', '{data['type']}', '{data['date_acquired'].split()[0]}', TRUE)"
                 print(ins_query)
                 ibm_db.exec_immediate(conn, ins_query)
+                window["new_student_header"].update(header + " Success") 
                 
             except:
                 window["hourly_rate"].update("Please enter a valid number.")
+                window["new_student_header"].update(header + " Failed to Insert") 
             
         else:
             sg.popup("Please first connect to the Database")
